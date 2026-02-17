@@ -1,1 +1,20 @@
-#python ignores
+#python
+__pycache__/
+*.py[cod]
+*.log
+*.pot
+*.pyc
+
+#virtual Environment
+venv/
+env/
+
+#Database
+*.sqlite3
+
+#IDE settings
+.vscode/
+.idea/
+
+#django static files
+staticfiles/
