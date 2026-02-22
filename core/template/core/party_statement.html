@@ -1,0 +1,183 @@
+<!-- core/templates/core/party_statement.html -->
+{% extends 'core/base.html' %}
+
+{% block title %}{{ party.name }} - Statement{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1>
+            <i class="fas fa-file-invoice"></i> Party Statement
+        </h1>
+        <h4>{{ party.name }} <small class="text-muted">({{ party.get_party_type_display }})</small></h4>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'core:party_detail' party.pk %}" class="btn btn-info">
+            <i class="fas fa-user"></i> Party Details
+        </a>
+        <button onclick="window.print()" class="btn btn-secondary">
+            <i class="fas fa-print"></i> Print
+        </button>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title">Total Invoices</h5>
+                <h3>{{ summary.total_invoices }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title">Sales</h5>
+                <h3>₹{{ summary.total_sales|floatformat:2 }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <h5 class="card-title">Purchases</h5>
+                <h3>₹{{ summary.total_purchases|floatformat:2 }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h5 class="card-title">Outstanding</h5>
+                <h3>₹{{ summary.outstanding|floatformat:2 }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Date Filter -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Start Date</label>
+                        <input type="date" name="start_date" class="form-control" value="{{ start_date }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">End Date</label>
+                        <input type="date" name="end_date" class="form-control" value="{{ end_date }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn btn-primary d-block">
+                            <i class="fas fa-filter"></i> Apply Filter
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Transactions Table -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Transaction History</h5>
+            </div>
+            <div class="card-body">
+                {% if invoices %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Invoice #</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Invoice Amount</th>
+                                    <th class="text-end">Paid Amount</th>
+                                    <th class="text-end">Balance</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for invoice in invoices %}
+                                    <tr>
+                                        <td>{{ invoice.invoice_date|date:"d/m/Y" }}</td>
+                                        <td>
+                                            <a href="#">{{ invoice.invoice_number }}</a>
+                                        </td>
+                                        <td>
+                                            <span class="badge {% if invoice.invoice_type == 'SALES' %}bg-success{% else %}bg-info{% endif %}">
+                                                {{ invoice.get_invoice_type_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge 
+                                                {% if invoice.status == 'PAID' %}bg-success
+                                                {% elif invoice.status == 'OVERDUE' %}bg-danger
+                                                {% elif invoice.status == 'CONFIRMED' %}bg-primary
+                                                {% else %}bg-secondary{% endif %}">
+                                                {{ invoice.get_status_display }}
+                                            </span>
+                                        </td>
+                                        <td class="text-end">₹{{ invoice.total_amount|floatformat:2 }}</td>
+                                        <td class="text-end">₹{{ invoice.paid_amount|floatformat:2 }}</td>
+                                        <td class="text-end">
+                                            {% with balance=invoice.balance_due %}
+                                                {% if balance > 0 %}
+                                                    <span class="text-danger">₹{{ balance|floatformat:2 }}</span>
+                                                {% else %}
+                                                    <span class="text-success">₹{{ balance|floatformat:2 }}</span>
+                                                {% endif %}
+                                            {% endwith %}
+                                        </td>
+                                        <td>
+                                            <a href="#" class="btn btn-sm btn-info" title="View">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-secondary">
+                                    <th colspan="4" class="text-end">Totals:</th>
+                                    <th class="text-end">₹{{ summary.total_sales|add:summary.total_purchases|floatformat:2 }}</th>
+                                    <th class="text-end">₹{{ summary.total_paid|floatformat:2 }}</th>
+                                    <th class="text-end">₹{{ summary.outstanding|floatformat:2 }}</th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        No transactions found for the selected period.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    @media print {
+        .navbar, .footer, .btn, form, .card-header .btn {
+            display: none !important;
+        }
+        .card {
+            border: none !important;
+        }
+    }
+</style>
+{% endblock %}

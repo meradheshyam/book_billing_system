@@ -1,0 +1,202 @@
+<!-- core/templates/core/party_detail.html -->
+{% extends 'core/base.html' %}
+
+{% block title %}{{ party.name }} - Party Details{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1>
+            <i class="fas fa-user"></i> {{ party.name }}
+            {% if not party.is_active %}
+                <span class="badge bg-danger">Inactive</span>
+            {% endif %}
+        </h1>
+        <p class="text-muted">
+            <span class="badge {% if party.party_type == 'CUSTOMER' %}bg-success{% else %}bg-info{% endif %}">
+                {{ party.get_party_type_display }}
+            </span>
+            {% if party.company_name %}
+                <br><small>{{ party.company_name }}</small>
+            {% endif %}
+        </p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'core:party_edit' party.pk %}" class="btn btn-warning">
+            <i class="fas fa-edit"></i> Edit
+        </a>
+        <a href="{% url 'core:party_statement' party.pk %}" class="btn btn-secondary">
+            <i class="fas fa-file-invoice"></i> Statement
+        </a>
+        <a href="{% url 'core:party_list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Contact Information -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5><i class="fas fa-address-card"></i> Contact Information</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr>
+                        <th style="width: 120px;">Phone:</th>
+                        <td>
+                            {% if party.phone %}
+                                <i class="fas fa-phone"></i> {{ party.phone }}
+                            {% else %}
+                                <span class="text-muted">Not provided</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Email:</th>
+                        <td>
+                            {% if party.email %}
+                                <i class="fas fa-envelope"></i> 
+                                <a href="mailto:{{ party.email }}">{{ party.email }}</a>
+                            {% else %}
+                                <span class="text-muted">Not provided</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Address Information -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5><i class="fas fa-map-marker-alt"></i> Address</h5>
+            </div>
+            <div class="card-body">
+                {% if party.address_line1 %}
+                    <address>
+                        {{ party.address_line1 }}<br>
+                        {% if party.address_line2 %}{{ party.address_line2 }}<br>{% endif %}
+                        {% if party.city %}{{ party.city }},{% endif %}
+                        {% if party.state %}{{ party.state }}<br>{% endif %}
+                        {% if party.postal_code %}{{ party.postal_code }}<br>{% endif %}
+                        {{ party.country }}
+                    </address>
+                {% else %}
+                    <p class="text-muted">No address provided</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tax Information -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5><i class="fas fa-file-invoice"></i> Tax Information</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr>
+                        <th style="width: 120px;">GST Number:</th>
+                        <td>
+                            {% if party.gst_number %}
+                                {{ party.gst_number }}
+                            {% else %}
+                                <span class="text-muted">Not provided</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>PAN Number:</th>
+                        <td>
+                            {% if party.pan_number %}
+                                {{ party.pan_number }}
+                            {% else %}
+                                <span class="text-muted">Not provided</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Credit Limit:</th>
+                        <td>₹{{ party.credit_limit|floatformat:2 }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Summary -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-bar"></i> Summary</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr>
+                        <th style="width: 120px;">Total Invoices:</th>
+                        <td>{{ party.invoices.count }}</td>
+                    </tr>
+                    <tr>
+                        <th>Outstanding:</th>
+                        <td>₹{{ party.get_outstanding_balance|floatformat:2 }}</td>
+                    </tr>
+                    <tr>
+                        <th>Member Since:</th>
+                        <td>{{ party.created_at|date:"F j, Y" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Last Updated:</th>
+                        <td>{{ party.updated_at|date:"F j, Y" }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Invoices (Placeholder) -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-history"></i> Recent Transactions</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_invoices %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Invoice #</th>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for invoice in recent_invoices %}
+                                    <tr>
+                                        <td>{{ invoice.invoice_number }}</td>
+                                        <td>{{ invoice.invoice_date }}</td>
+                                        <td>{{ invoice.get_invoice_type_display }}</td>
+                                        <td>₹{{ invoice.total_amount|floatformat:2 }}</td>
+                                        <td>{{ invoice.get_status_display }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No recent transactions found.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

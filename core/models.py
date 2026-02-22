@@ -10,9 +10,32 @@ class Party(models.Model):
     """
     Represents a customer or supplier.
     """
+    # Add to core/models.py inside the Party class
+    def get_outstanding_balance(self):
+            """
+            Calculate the total outstanding balance for this party.
+            Positive means party owes us (customer), negative means we owe party (supplier).
+            """
+            from django.db.models import Sum, Q
+            
+            # Get all confirmed invoices for this party
+            invoices = self.invoices.filter(status__in=['CONFIRMED', 'OVERDUE', 'PAID'])
+            
+            # Calculate total invoiced amount
+            total_invoiced = invoices.aggregate(total=Sum('total_amount'))['total'] or 0
+            
+            # Calculate total paid amount
+            total_paid = invoices.aggregate(total=Sum('paid_amount'))['total'] or 0
+            
+            # Outstanding balance = total_invoiced - total_paid
+            # For customers (positive means they owe us)
+            # For suppliers (negative means we owe them)
+            return total_invoiced - total_paid
     class PartyType(models.TextChoices):
         CUSTOMER = 'CUSTOMER', 'Customer'
         SUPPLIER = 'SUPPLIER', 'Supplier'
+    
+
     
     # Basic Information
     party_type = models.CharField(

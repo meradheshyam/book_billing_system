@@ -1,0 +1,59 @@
+<!-- core/templates/core/party_confirm_delete.html -->
+{% extends 'core/base.html' %}
+
+{% block title %}Delete Party{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h4><i class="fas fa-exclamation-triangle"></i> Confirm Delete</h4>
+            </div>
+            <div class="card-body">
+                <p class="lead">Are you sure you want to delete <strong>{{ object.name }}</strong>?</p>
+                
+                <div class="alert alert-warning">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Note:</strong> This action cannot be undone. If the party has any transactions, 
+                    deletion will be prevented to maintain data integrity.
+                </div>
+                
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5>Party Details:</h5>
+                        <table class="table table-sm">
+                            <tr>
+                                <th>Name:</th>
+                                <td>{{ object.name }}</td>
+                            </tr>
+                            <tr>
+                                <th>Type:</th>
+                                <td>{{ object.get_party_type_display }}</td>
+                            </tr>
+                            <tr>
+                                <th>Phone:</th>
+                                <td>{{ object.phone|default:"Not provided" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Email:</th>
+                                <td>{{ object.email|default:"Not provided" }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Yes, Delete
+                    </button>
+                    <a href="{% url 'core:party_detail' object.pk %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

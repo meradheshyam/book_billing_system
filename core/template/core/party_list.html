@@ -1,0 +1,176 @@
+<!-- core/templates/core/party_list.html -->
+{% extends 'core/base.html' %}
+
+{% block title %}Parties - Book Billing System{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1><i class="fas fa-users"></i> Parties</h1>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'core:party_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add New Party
+        </a>
+    </div>
+</div>
+
+<!-- Search and Filter Bar -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            <input type="text" 
+                                   class="form-control" 
+                                   name="q" 
+                                   placeholder="Search by name, company, phone, email, or city..." 
+                                   value="{{ query }}">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <select name="type" class="form-select">
+                            <option value="">All Party Types</option>
+                            {% for type_value, type_label in party_types %}
+                                <option value="{{ type_value }}" {% if party_type == type_value %}selected{% endif %}>
+                                    {{ type_label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-secondary w-100">Filter</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Parties Table -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                {% if parties %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Contact</th>
+                                    <th>Location</th>
+                                    <th>Credit Limit</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for party in parties %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ party.name }}</strong>
+                                            {% if party.company_name %}
+                                                <br><small class="text-muted">{{ party.company_name }}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge {% if party.party_type == 'CUSTOMER' %}bg-success{% else %}bg-info{% endif %}">
+                                                {{ party.get_party_type_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if party.phone %}
+                                                <i class="fas fa-phone"></i> {{ party.phone }}<br>
+                                            {% endif %}
+                                            {% if party.email %}
+                                                <small><i class="fas fa-envelope"></i> {{ party.email }}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if party.city %}
+                                                {{ party.city }}{% if party.state %}, {{ party.state }}{% endif %}
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-end">₹{{ party.credit_limit|floatformat:2 }}</td>
+                                        <td>
+                                            {% if party.is_active %}
+                                                <span class="badge bg-success">Active</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Inactive</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <a href="{% url 'core:party_detail' party.pk %}" 
+                                                   class="btn btn-info" 
+                                                   title="View Details">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="{% url 'core:party_edit' party.pk %}" 
+                                                   class="btn btn-warning"
+                                                   title="Edit">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <a href="{% url 'core:party_statement' party.pk %}" 
+                                                   class="btn btn-secondary"
+                                                   title="Statement">
+                                                    <i class="fas fa-file-invoice"></i>
+                                                </a>
+                                                <button type="button" 
+                                                        class="btn btn-danger" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#deleteModal{{ party.pk }}"
+                                                        title="Delete">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                            
+                                            <!-- Delete Modal -->
+                                            <div class="modal fade" id="deleteModal{{ party.pk }}" tabindex="-1">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title">Confirm Delete</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <p>Are you sure you want to delete <strong>{{ party.name }}</strong>?</p>
+                                                            <p class="text-danger">
+                                                                <i class="fas fa-exclamation-triangle"></i>
+                                                                This action cannot be undone. All related transactions will be protected.
+                                                            </p>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                            <form method="post" action="{% url 'core:party_delete' party.pk %}" style="display: inline;">
+                                                                {% csrf_token %}
+                                                                <button type="submit" class="btn btn-danger">Delete</button>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        No parties found. <a href="{% url 'core:party_create' %}" class="alert-link">Add your first party</a>.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
