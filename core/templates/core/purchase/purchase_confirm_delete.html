@@ -1,0 +1,62 @@
+<!-- core/templates/core/purchase/purchase_confirm_delete.html -->
+{% extends 'core/base.html' %}
+
+{% block title %}Delete Purchase Order{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h4><i class="fas fa-exclamation-triangle"></i> Confirm Delete</h4>
+            </div>
+            <div class="card-body">
+                <p class="lead">Are you sure you want to delete purchase order <strong>{{ purchase.invoice_number }}</strong>?</p>
+                
+                <div class="alert alert-warning">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Note:</strong> This action cannot be undone. This will permanently delete:
+                    <ul class="mb-0 mt-2">
+                        <li>The purchase order header</li>
+                        <li>All {{ purchase.items.count }} line items</li>
+                    </ul>
+                </div>
+                
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h6>Purchase Details:</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <th>Supplier:</th>
+                                <td>{{ purchase.party.name }}</td>
+                            </tr>
+                            <tr>
+                                <th>Date:</th>
+                                <td>{{ purchase.invoice_date|date:"d/m/Y" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Total:</th>
+                                <td>₹{{ purchase.total_amount|floatformat:2 }}</td>
+                            </tr>
+                            <tr>
+                                <th>Status:</th>
+                                <td>{{ purchase.get_status_display }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Yes, Delete
+                    </button>
+                    <a href="{% url 'core:purchase_detail' purchase.pk %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

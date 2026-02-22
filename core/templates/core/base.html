@@ -41,6 +41,16 @@
                             <i class="fas fa-file-invoice"></i> Invoices
                         </a>
                     </li>
+                    <!-- Add to core/templates/core/base.html navigation -->
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="purchasesDropdown" role="button" data-bs-toggle="dropdown">
+        <i class="fas fa-truck"></i> Purchases
+    </a>
+    <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="{% url 'core:purchase_list' %}">All Purchases</a></li>
+        <li><a class="dropdown-item" href="{% url 'core:purchase_create' %}">New Purchase Order</a></li>
+    </ul>
+</li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'admin:index' %}">
                             <i class="fas fa-cog"></i> Admin

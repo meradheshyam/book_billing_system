@@ -1,0 +1,75 @@
+<!-- core/templates/core/purchase/purchase_confirm.html -->
+{% extends 'core/base.html' %}
+
+{% block title %}Confirm Purchase - {{ purchase.invoice_number }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1><i class="fas fa-check-circle"></i> Confirm Purchase Order</h1>
+        <h4>{{ purchase.invoice_number }}</h4>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'core:purchase_detail' purchase.pk %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5>Confirm Order</h5>
+            </div>
+            <div class="card-body">
+                <p class="lead">Are you sure you want to confirm this purchase order?</p>
+                
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Note:</strong> Once confirmed:
+                    <ul class="mb-0 mt-2">
+                        <li>The order will be locked for editing</li>
+                        <li>You will be able to receive goods against this order</li>
+                        <li>The order number will be finalized</li>
+                    </ul>
+                </div>
+                
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h6>Order Summary:</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <th>Supplier:</th>
+                                <td>{{ purchase.party.name }}</td>
+                            </tr>
+                            <tr>
+                                <th>Order Date:</th>
+                                <td>{{ purchase.invoice_date|date:"d/m/Y" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Items:</th>
+                                <td>{{ purchase.items.count }}</td>
+                            </tr>
+                            <tr>
+                                <th>Total Amount:</th>
+                                <td><strong>₹{{ purchase.total_amount|floatformat:2 }}</strong></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check"></i> Yes, Confirm Order
+                    </button>
+                    <a href="{% url 'core:purchase_detail' purchase.pk %}" class="btn btn-secondary">
+                        Cancel
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

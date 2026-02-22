@@ -1,0 +1,319 @@
+<!-- core/templates/core/purchase/purchase_form.html -->
+{% extends 'core/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+<style>
+    .item-row {
+        background-color: #f8f9fa;
+        padding: 15px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+        border-left: 4px solid #0d6efd;
+    }
+    .delete-row {
+        margin-top: 28px;
+    }
+    .formset-row {
+        transition: all 0.3s ease;
+    }
+    .total-section {
+        background-color: #e9ecef;
+        padding: 15px;
+        border-radius: 5px;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1><i class="fas {% if purchase %}fa-edit{% else %}fa-plus-circle{% endif %}"></i> {{ title }}</h1>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'core:purchase_list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to List
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <form method="post" id="purchaseForm">
+            {% csrf_token %}
+            
+            <!-- Invoice Header -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Purchase Order Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.party.id_for_label }}" class="form-label">Supplier *</label>
+                            {{ form.party }}
+                            {% if form.party.errors %}
+                                <div class="invalid-feedback d-block">{{ form.party.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="{{ form.invoice_date.id_for_label }}" class="form-label">Invoice Date *</label>
+                            {{ form.invoice_date }}
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="{{ form.due_date.id_for_label }}" class="form-label">Due Date</label>
+                            {{ form.due_date }}
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label for="{{ form.payment_method.id_for_label }}" class="form-label">Payment Method</label>
+                            {{ form.payment_method }}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.payment_reference.id_for_label }}" class="form-label">Payment Reference</label>
+                            {{ form.payment_reference }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Line Items -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Items</h5>
+                </div>
+                <div class="card-body">
+                    {{ formset.management_form }}
+                    
+                    <div id="formset-container">
+                        {% for item_form in formset %}
+                            <div class="formset-row item-row">
+                                <div class="row">
+                                    {{ item_form.id }}
+                                    <div class="col-md-4">
+                                        <label class="form-label">Book</label>
+                                        {{ item_form.book }}
+                                    </div>
+                                    <div class="col-md-1">
+                                        <label class="form-label">Qty</label>
+                                        {{ item_form.quantity }}
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">Unit Price</label>
+                                        {{ item_form.unit_price }}
+                                    </div>
+                                    <div class="col-md-1">
+                                        <label class="form-label">Disc %</label>
+                                        {{ item_form.discount_percent }}
+                                    </div>
+                                    <div class="col-md-1">
+                                        <label class="form-label">Tax %</label>
+                                        {{ item_form.tax_percent }}
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">Line Total</label>
+                                        <input type="text" class="form-control line-total" readonly value="0.00">
+                                    </div>
+                                    <div class="col-md-1 delete-row">
+                                        {% if formset.can_delete %}
+                                            <label class="form-label">&nbsp;</label>
+                                            {{ item_form.DELETE }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% if item_form.errors %}
+                                    <div class="alert alert-danger mt-2">
+                                        {{ item_form.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <button type="button" class="btn btn-success" id="add-item">
+                                <i class="fas fa-plus"></i> Add Item
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Totals -->
+                    <div class="row mt-4">
+                        <div class="col-md-6 offset-md-6">
+                            <div class="total-section">
+                                <div class="row mb-2">
+                                    <div class="col-6">Subtotal:</div>
+                                    <div class="col-6 text-end" id="subtotal">₹0.00</div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-6">Discount:</div>
+                                    <div class="col-6 text-end" id="total-discount">₹0.00</div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-6">Tax:</div>
+                                    <div class="col-6 text-end" id="total-tax">₹0.00</div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-6"><strong>Grand Total:</strong></div>
+                                    <div class="col-6 text-end"><strong id="grand-total">₹0.00</strong></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Additional Notes -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Additional Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="{{ form.notes.id_for_label }}">Notes</label>
+                            {{ form.notes }}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="{{ form.terms_and_conditions.id_for_label }}">Terms & Conditions</label>
+                            {{ form.terms_and_conditions }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Form Actions -->
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save Purchase Order
+                    </button>
+                    {% if purchase %}
+                        <a href="{% url 'core:purchase_detail' purchase.pk %}" class="btn btn-secondary">
+                            Cancel
+                        </a>
+                    {% else %}
+                        <a href="{% url 'core:purchase_list' %}" class="btn btn-secondary">
+                            Cancel
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+$(document).ready(function() {
+    // Initialize Select2 for book dropdowns
+    $('.select2-book').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        placeholder: 'Select a book...',
+        allowClear: true
+    });
+    
+    // Function to calculate line total
+    function calculateLineTotal(row) {
+        var qty = parseFloat($(row).find('.quantity-input').val()) || 0;
+        var price = parseFloat($(row).find('.price-input').val()) || 0;
+        var discount = parseFloat($(row).find('.discount-input').val()) || 0;
+        var tax = parseFloat($(row).find('.tax-input').val()) || 0;
+        
+        var subtotal = qty * price;
+        var discountAmount = (subtotal * discount) / 100;
+        var afterDiscount = subtotal - discountAmount;
+        var taxAmount = (afterDiscount * tax) / 100;
+        var lineTotal = afterDiscount + taxAmount;
+        
+        $(row).find('.line-total').val(lineTotal.toFixed(2));
+        
+        return {
+            subtotal: subtotal,
+            discountAmount: discountAmount,
+            taxAmount: taxAmount,
+            lineTotal: lineTotal
+        };
+    }
+    
+    // Function to calculate all totals
+    function calculateAllTotals() {
+        var subtotal = 0;
+        var totalDiscount = 0;
+        var totalTax = 0;
+        var grandTotal = 0;
+        
+        $('.formset-row').each(function() {
+            var totals = calculateLineTotal(this);
+            subtotal += totals.subtotal;
+            totalDiscount += totals.discountAmount;
+            totalTax += totals.taxAmount;
+            grandTotal += totals.lineTotal;
+        });
+        
+        $('#subtotal').text('₹' + subtotal.toFixed(2));
+        $('#total-discount').text('₹' + totalDiscount.toFixed(2));
+        $('#total-tax').text('₹' + totalTax.toFixed(2));
+        $('#grand-total').text('₹' + grandTotal.toFixed(2));
+    }
+    
+    // Recalculate when inputs change
+    $(document).on('input', '.quantity-input, .price-input, .discount-input, .tax-input', function() {
+        calculateAllTotals();
+    });
+    
+    // Add new row
+   var formCount = parseInt("{{ formset.total_form_count }}") || 0;
+    $('#add-item').click(function() {
+        var newRow = $('.formset-row:first').clone();
+        newRow.find('input, select').each(function() {
+            if ($(this).is('select')) {
+                $(this).val('').trigger('change');
+            } else {
+                $(this).val('');
+            }
+        });
+        newRow.find('.line-total').val('0.00');
+        
+        // Update form indices
+        var regex = new RegExp('form-(\\d+)-', 'g');
+        newRow.html(function(i, html) {
+            return html.replace(regex, 'form-' + formCount + '-');
+        });
+        
+        $('#formset-container').append(newRow);
+        formCount++;
+        $('#id_form-TOTAL_FORMS').val(formCount);
+        
+        // Reinitialize Select2 on new row
+        newRow.find('select').select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            placeholder: 'Select a book...',
+            allowClear: true
+        });
+    });
+    
+    // Handle delete checkbox
+    $(document).on('change', 'input[type="checkbox"][name$="-DELETE"]', function() {
+        $(this).closest('.formset-row').toggle(!this.checked);
+    });
+    
+    // Initial calculation
+    calculateAllTotals();
+});
+</script>
+{% endblock %}

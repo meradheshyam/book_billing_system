@@ -119,6 +119,15 @@ class Invoice(models.Model):
     """
     Represents a sales or purchase invoice.
     """
+    invoice_date = models.DateField()
+    payment_method = models.CharField(max_length=50)
+    terms_and_conditions = models.TextField(blank=True, null=True)
+    due_date = models.DateField(blank=True, null=True)
+    payment_reference = models.CharField(max_length=100, blank=True, null=True)
+    party = models.ForeignKey("Party", on_delete=models.CASCADE)
+    notes = models.TextField(blank=True, null=True)
+
+    # other existing fields...
     class InvoiceType(models.TextChoices):
         SALES = 'SALES', 'Sales Invoice'
         PURCHASE = 'PURCHASE', 'Purchase Invoice'
